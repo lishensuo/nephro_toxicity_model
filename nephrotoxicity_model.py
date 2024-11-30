@@ -1,6 +1,4 @@
 import os
-import glob
-import numpy as np
 import pandas as pd
 from pathlib import Path
 import tempfile
@@ -13,14 +11,11 @@ from mordred import Calculator, descriptors
 calc = Calculator(descriptors, ignore_3D=True)
 
 
+
 # https://github.com/dataprofessor/padel/blob/main/fingerprints_xml.zip
 
-# p_main = Path("data/middle/fp_padel")
-# p_xml = Path("/home/lishensuo/PROJECT/Toxicity/data/feature/fingerp/fingerprints_xml")
-# fp_meta = "/home/lishensuo/PROJECT/Toxicity/data/feature/merge/All_feat_meta19793.csv"
 
-
-def get_padel_fp(cid, smile, p_main, p_xml, p_fpmeta):
+def get_padel_fp(cid, smile, p_work, p_xml, p_fpmeta):
 
     cid = str(cid) if isinstance(cid, int) else cid  
 
@@ -42,7 +37,8 @@ def get_padel_fp(cid, smile, p_main, p_xml, p_fpmeta):
          'SubstructureCount', #308 +
          'Substructure'] #308
 
-    p_main_cid = Path("./deploy/demo") / 'cid_fp' / cid
+    p_main_cid = p_work / 'cid_fp' / cid
+
     if not p_main_cid.exists() or not any(p_main_cid.iterdir()):
     # if len(os.listdir(dir_fp)) != 12:
         p_main_cid.mkdir(parents=True, exist_ok=True)
@@ -84,14 +80,14 @@ def get_padel_fp(cid, smile, p_main, p_xml, p_fpmeta):
     print(f"Padel fingerprints encode has been done and stored in {p_main_cid}" )
 
 
-def get_padel_desc(cid, smile, p_main):
+def get_padel_desc(cid, smile, p_work):
 
     cid = str(cid) if isinstance(cid, int) else cid  
 
     print("The compound CID    : " + cid)
     print("The compound SMILES : " + smile)
 
-    p_main_cid = p_main / 'cid_desc' / cid
+    p_main_cid = p_work / 'cid_desc' / cid
 
     if not p_main_cid.exists() or not any(p_main_cid.iterdir()):
         p_main_cid.mkdir(parents=True, exist_ok=True)
@@ -120,7 +116,7 @@ def get_padel_desc(cid, smile, p_main):
     print(f"Padel & Mordred descriptors encode have been done and stored in {p_main_cid}" )
 
 
-def predict_nephrotoxicity(cid, smile, p_main, p_model, p_model_meta):
+def predict_nephrotoxicity(cid, smile, p_work, p_model, p_model_meta):
     cid = str(cid) if isinstance(cid, int) else cid  
     model_meta = pd.read_csv(p_model_meta)
 
@@ -136,8 +132,8 @@ def predict_nephrotoxicity(cid, smile, p_main, p_model, p_model_meta):
 
         model = TabularPredictor.load(p_model_choose)
 
-        feat_fls = [fl for fl in (p_main / "cid_fp" / cid).iterdir()] + \
-                    [fl for fl in (p_main / "cid_desc" / cid).iterdir()]
+        feat_fls = [fl for fl in (p_work / "cid_fp" / cid).iterdir()] + \
+                    [fl for fl in (p_work / "cid_desc" / cid).iterdir()]
         feat_types = ['AtomPairs2DCount', 'AtomPairs2D', 'EState', 'CDKextended', 'CDK',
                        'CDKgraphonly', 'KlekotaRothCount', 'KlekotaRoth', 'MACCS', 'PubChem', 
                        'SubstructureCount', 'Substructure'] + ['padel', 'mordred']
@@ -162,28 +158,28 @@ def predict_nephrotoxicity(cid, smile, p_main, p_model, p_model_meta):
 
 
 
-def main(cid, smile, p_main, p_model, p_model_meta, p_xml, p_fpmeta):
+def main(cid, smile, p_work, p_model, p_model_meta, p_xml, p_fpmeta):
     cid = str(cid) if isinstance(cid, int) else cid  
-    # for p in [p_main, p_model, p_xml, p_fpmeta]:
-    p_main = p_main if isinstance(p_main, Path) else Path(p_main)
+    # for p in [p_work, p_model, p_xml, p_fpmeta]:
+    p_work = p_work if isinstance(p_work, Path) else Path(p_work)
     p_model = p_model if isinstance(p_model, Path) else Path(p_model)
     p_xml = p_xml if isinstance(p_xml, Path) else Path(p_xml)
     p_fpmeta = p_fpmeta if isinstance(p_fpmeta, Path) else Path(p_fpmeta)
 
 
     print("*"*20, "Step 1/2: Prepare fingerprint feature for the input compound.", "*"*20)
-    get_padel_fp(cid, smile, p_main, p_xml, p_fpmeta)
-    get_padel_desc(cid, smile, p_main)
+    get_padel_fp(cid, smile, p_work, p_xml, p_fpmeta)
+    get_padel_desc(cid, smile, p_work)
 
     print("*"*20, "Step 2/2: Predict the nephrotoxicity of the input compund.", "*"*20)
-    pred_score, pred_table = predict_nephrotoxicity(cid, smile, p_main, p_model, p_model_meta)
+    pred_score, pred_table = predict_nephrotoxicity(cid, smile, p_work, p_model, p_model_meta)
 
     print("*"*20, f"Done! The overall estimated nephrotoxicity probality of the input compund is {pred_score:.3f}.", "*"*20)
     
     pred_score_dict = {"cid":cid, "smile":smile, "score":pred_score}
 
 
-    p_save = p_main / "cid_pred" / cid
+    p_save = p_work / "cid_pred" / cid
     if not p_save.exists():
         p_save.mkdir(exist_ok=True, parents=True)
 
@@ -199,14 +195,16 @@ if __name__ == "__main__":
 
     parser.add_argument('--cid', type=str, required=True, help='Chemical CID')
     parser.add_argument('--smile', type=str, required=True, help='SMILE string')
-    parser.add_argument('--p_main', type=str, required=True, help='Main path')
+    parser.add_argument('--p_work', type=str, default="./task", help='Main path')
     parser.add_argument('--p_model', type=str, required=True, help='Model path')
     parser.add_argument('--p_model_meta', type=str, required=True, help='Model Metainfo path')
     parser.add_argument('--p_xml', type=str, required=True, help='Fingerprint XML path')
     parser.add_argument('--p_fpmeta', type=str, required=True, help='Fingerprint Metainfo path')
 
     args = parser.parse_args()
+    main(args.cid, args.smile, args.p_work, args.p_model, args.p_model_meta, args.p_xml, args.p_fpmeta)
 
-    main(args.cid, args.smile, args.p_main, args.p_model, args.p_model_meta, args.p_xml, args.p_fpmeta)
+
+
 
 

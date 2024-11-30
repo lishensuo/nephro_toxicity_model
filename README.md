@@ -1,39 +1,117 @@
-# nephro_toxicity_model
+# Introduction
 
-#### 介绍
-{**以下是 Gitee 平台说明，您可以替换此简介**
-Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用 Gitee 实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
+This repository provides ensemble machine learning models for predicting nephrotoxicity of compounds, including natural products from traditional Chinese medicine (TCM). These models utilize structural fingerprints and molecular descriptors of the compounds to make accurate predictions. Overall, the repository enables efficient and accurate nephrotoxicity prediction, providing valuable insights for researchers working with natural compounds or traditional Chinese medicine.
 
-#### 软件架构
-软件架构说明
+![image-20241130123402793](https://raw.githubusercontent.com/lishensuo/images2/main/img01/image-20241130123402793.png)
 
 
-#### 安装教程
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+---
 
-#### 使用说明
+# Preparation
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## Python Environment
 
-#### 参与贡献
+We recommend using **conda** to create the Python environment based on the `requirement.txt` file. 
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+The main dependencies include:
+
+- **padelpy**, **mordred**, and **rdkit**: For chemical feature representation.
+- **autogluon**: For machine learning modeling.
+
+## Data
+
+The repository includes the following necessary data:
+
+- **`fingerprints_xml/`**: A folder containing the required files to encode 12 PaDEL fingerprint features, which can be downloaded via the provided link.
+- **`fingerprints_metainfo.csv`**: A file with brief annotations for all the chemical features used to build the models.
+- **`model100_metainfo.csv`**: A file summarizing the modeling results for 100 datasets with 5-fold cross-validation.
+
+### Model Files
+
+Due to GitHub's storage limitations, the model files are hosted on Google Drive. Users can download the compressed file (`.gz`) from the provided link and decompress it locally.
+
+---
+
+# Tutorial
+
+Once the environment and data are set up, predicting the nephrotoxicity of a compound is straightforward, especially for natural ingredients in TCM. The only required inputs are the **PubChem ID** and its **SMILES** string.
+
+The script will automatically:
+
+1. Encode the compound's features.
+2. Make predictions.
+
+### Example Workflow
+
+1. Provide the **PubChem ID** and **SMILES** of the compound.
+2. Run the script.
+3. The predictive nephrotoxicity score will be displayed, and the results will be saved locally.
+
+---
 
 
-#### 特技
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+
+```python
+python nephrotoxicity_model.py \
+    --cid 6681 \
+    --smile "C1=CC=C2C(=C1)C(=O)C3=C(C2=O)C(=C(C=C3Br)Br)N" \
+	--p_work "./task" \
+    --p_model "./path/to/nephro_toxi_model" \
+    --p_model_meta "./model100_metainfo.csv" \
+    --p_xml "./fingerprints_xml" \
+    --p_fpmeta "./fingerprints_metainfo.csv"
+```
+
+- Log record:
+
+```
+******************** Step 1/2: Prepare fingerprint feature for the input compound. ********************
+The compound CID    : 6681
+The compound SMILES : C1=CC=C2C(=C1)C(=O)C3=C(C2=O)C(=C(C=C3Br)Br)N
+==> Start to encode AtomPairs2DCount [1/12].
+==> Start to encode AtomPairs2D [2/12].
+==> Start to encode EState [3/12].
+==> Start to encode CDKextended [4/12].
+==> Start to encode CDK [5/12].
+==> Start to encode CDKgraphonly [6/12].
+==> Start to encode KlekotaRothCount [7/12].
+==> Start to encode KlekotaRoth [8/12].
+==> Start to encode MACCS [9/12].
+==> Start to encode PubChem [10/12].
+==> Start to encode SubstructureCount [11/12].
+==> Start to encode Substructure [12/12].
+Padel fingerprints encode has been done and stored in task/cid_fp/6681
+The compound CID    : 6681
+The compound SMILES : C1=CC=C2C(=C1)C(=O)C3=C(C2=O)C(=C(C=C3Br)Br)N
+==> Start to encode PaDEL Descriptor.
+==> Start to encode Mordred Descriptor.
+Padel & Mordred descriptors encode have been done and stored in task/cid_desc/6681
+******************** Step 2/2: Predict the nephrotoxicity of the input compund. ********************
+===> Start to predict the nephrotoxicity via set_0 model (SubstructureCount_fold0)
+===> Start to predict the nephrotoxicity via set_0 model (mordred_fold1)
+===> Start to predict the nephrotoxicity via set_0 model (AtomPairs2D_fold2)
+===> Start to predict the nephrotoxicity via set_0 model (mordred_fold3)
+===> Start to predict the nephrotoxicity via set_0 model (padel_fold4)
+===> Start to predict the nephrotoxicity via set_1 model (PubChem_fold0)
+===> Start to predict the nephrotoxicity via set_1 model (padel_fold1)
+===> Start to predict the nephrotoxicity via set_1 model (AtomPairs2DCount_fold2)
+===> Start to predict the nephrotoxicity via set_1 model (padel_fold3)
+===> Start to predict the nephrotoxicity via set_1 model (AtomPairs2DCount_fold4)
+######## omit some redundancy log ########
+===> Start to predict the nephrotoxicity via set_99 model (SubstructureCount_fold0)
+===> Start to predict the nephrotoxicity via set_99 model (PubChem_fold1)
+===> Start to predict the nephrotoxicity via set_99 model (mordred_fold2)
+===> Start to predict the nephrotoxicity via set_99 model (KlekotaRothCount_fold3)
+===> Start to predict the nephrotoxicity via set_99 model (KlekotaRoth_fold4)
+******************** Done! The overall estimated nephrotoxicity probality of the input compund is 0.639. ********************
+
+```
+
+- Saved results
+
+```python
+ls ./task/cid_desc/6681
+# Mordred_Descriptor.csv  PaDEL_Descriptor.csv
+```
