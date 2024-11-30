@@ -23,13 +23,13 @@ The main dependencies include:
 
 The repository includes the following necessary data:
 
-- **`fingerprints_xml/`**: A folder containing the required files to encode 12 PaDEL fingerprint features, which can be downloaded via the provided link.
+- **`fingerprints_xml/`**: A folder containing the required files to encode 12 PaDEL fingerprint features, which can be downloaded via the [link](https://github.com/dataprofessor/padel).
 - **`fingerprints_metainfo.csv`**: A file with brief annotations for all the chemical features used to build the models.
 - **`model100_metainfo.csv`**: A file summarizing the modeling results for 100 datasets with 5-fold cross-validation.
 
 ### Model Files
 
-Due to GitHub's storage limitations, the model files are hosted on Google Drive. Users can download the compressed file (`.gz`) from the provided link and decompress it locally.
+Due to GitHub's storage limitations, the model files are hosted on Google Drive. Users can download the compressed file (`.gz`) from the provided [link](https://drive.google.com/drive/folders/1t8AP_wJZ5lTmlJbj69a9kInBRpqogIOB?usp=drive_link) and decompress it locally.
 
 ---
 
@@ -112,6 +112,6 @@ Padel & Mordred descriptors encode have been done and stored in task/cid_desc/66
 - Saved results
 
 ```python
-ls ./task/cid_desc/6681
-# Mordred_Descriptor.csv  PaDEL_Descriptor.csv
+ls ./task/cid_pred/6681
+# overall_score.csv  raw_score.csv
 ```
